@@ -1,0 +1,8 @@
+name: PlugCore
+version: '1.0-SNAPSHOT'
+main: io.plugcore.plugCore.PlugCore
+api-version: '1.21'
+load: STARTUP
+authors: [ Trenton ]
+description: PlugCore
+website: plugcore.io
