@@ -107,12 +107,12 @@ public class DatabaseService {
         });
     }
 
-    public CompletableFuture<Boolean> checkPluginPurchase(UUID serverUuid, String pluginName) {
+    public CompletableFuture<Boolean> checkPluginPurchase(UUID serverUuid, String jarHash) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 JsonObject requestBody = new JsonObject();
                 requestBody.addProperty("serverUuid", serverUuid.toString());
-                requestBody.addProperty("pluginName", pluginName);
+                requestBody.addProperty("jarHash", jarHash);
 
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(baseUrl + "/check-plugin"))

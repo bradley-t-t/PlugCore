@@ -17,15 +17,25 @@ public final class PlugCore extends JavaPlugin {
     private PluginDependencyService dependencyService;
 
     @Override
-    public void onEnable() {
+    public void onLoad() {
         saveDefaultConfig();
-
         configUtil = new ConfigUtil(this);
-
         databaseService = new DatabaseService(DatabaseConfig.getBaseUrl(), DatabaseConfig.getAnonKey());
         validationService = new ValidationService(this, databaseService, configUtil);
         dependencyService = new PluginDependencyService(this, validationService);
 
+        if (!configUtil.isServerLinked()) {
+            getLogger().warning("Server not linked! Plugins requiring PlugCore may fail to load.");
+            getLogger().warning("Link your server: /plugcore link <token>");
+            return;
+        }
+
+        getLogger().info("Pre-validating STARTUP plugins...");
+        dependencyService.scanAndValidateStartupPlugins();
+    }
+
+    @Override
+    public void onEnable() {
         PlugCoreAPI.setInstance(this);
 
         PlugCoreCommand command = new PlugCoreCommand(validationService, dependencyService);

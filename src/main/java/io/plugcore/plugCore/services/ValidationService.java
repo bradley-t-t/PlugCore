@@ -72,7 +72,7 @@ public class ValidationService {
                 });
     }
 
-    public CompletableFuture<Boolean> isPluginAuthorized(String pluginName) {
+    public CompletableFuture<Boolean> isPluginAuthorized(String pluginId) {
         if (!configUtil.isServerLinked()) {
             return CompletableFuture.completedFuture(false);
         }
@@ -82,7 +82,24 @@ public class ValidationService {
             return CompletableFuture.completedFuture(false);
         }
 
-        return databaseService.checkPluginPurchase(serverUuid, pluginName);
+        return databaseService.checkPluginPurchase(serverUuid, pluginId);
+    }
+
+    public boolean isPluginAuthorizedSync(String jarHash) {
+        if (!configUtil.isServerLinked()) {
+            return false;
+        }
+
+        UUID serverUuid = configUtil.getServerUUID();
+        if (serverUuid == null) {
+            return false;
+        }
+
+        try {
+            return databaseService.checkPluginPurchase(serverUuid, jarHash).get();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to validate plugin synchronously", e);
+        }
     }
 
     public ServerLinkData getCurrentLinkData() {
