@@ -87,16 +87,16 @@ public class PluginDependencyService {
 
                     if (!authorized) {
                         corePlugin.getLogger().severe("STARTUP plugin '" + plugin.getName() + "' is NOT authorized!");
-                        corePlugin.getLogger().severe("Server will not start properly. Purchase this plugin at plugcore.io");
-                        throw new RuntimeException("Unauthorized STARTUP plugin detected: " + plugin.getName());
+                        corePlugin.getLogger().severe("This plugin will be disabled. Purchase at plugcore.io");
+                        dependentPlugins.put(jarHash, false);
+                    } else {
+                        corePlugin.getLogger().info("STARTUP plugin '" + plugin.getName() + "' is authorized! ✓");
+                        dependentPlugins.put(jarHash, true);
                     }
-
-                    corePlugin.getLogger().info("STARTUP plugin '" + plugin.getName() + "' is authorized! ✓");
-                    dependentPlugins.put(jarHash, true);
 
                 } catch (Exception e) {
                     corePlugin.getLogger().severe("Failed to validate STARTUP plugin '" + plugin.getName() + "': " + e.getMessage());
-                    throw new RuntimeException("Cannot validate STARTUP plugin: " + plugin.getName(), e);
+                    dependentPlugins.put(jarHash, false);
                 }
             }
         }
