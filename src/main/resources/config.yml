@@ -1,0 +1,11 @@
+
+server:
+  linked: false
+  server-id: ""
+  server-uuid: ""
+  owner-uuid: ""
+  verification-token: ""
+
+cache:
+  validation-ttl: 300
+
