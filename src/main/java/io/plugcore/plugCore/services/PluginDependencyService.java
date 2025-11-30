@@ -45,8 +45,6 @@ public class PluginDependencyService {
                 }
 
                 dependentPlugins.put(jarHash, false);
-                corePlugin.getLogger().info("Found dependent plugin: " + plugin.getName());
-                corePlugin.getLogger().info("  Full Hash: " + jarHash);
             }
         }
     }
@@ -82,7 +80,6 @@ public class PluginDependencyService {
                 }
 
                 corePlugin.getLogger().info("Validating STARTUP plugin: " + plugin.getName());
-                corePlugin.getLogger().info("  Full Hash: " + jarHash);
 
                 try {
                     boolean authorized = validationService.isPluginAuthorizedSync(jarHash);
@@ -112,10 +109,6 @@ public class PluginDependencyService {
                 return null;
             }
 
-            corePlugin.getLogger().info("Calculating hash for: " + plugin.getName());
-            corePlugin.getLogger().info("  File: " + pluginFile.getAbsolutePath());
-            corePlugin.getLogger().info("  Size: " + pluginFile.length() + " bytes");
-
             java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
             java.io.FileInputStream fis = new java.io.FileInputStream(pluginFile);
             byte[] byteArray = new byte[1024];
@@ -132,15 +125,15 @@ public class PluginDependencyService {
                 sb.append(String.format("%02x", b));
             }
 
-            String hash = sb.toString();
-            corePlugin.getLogger().info("  SHA-256 Hash (FULL): " + hash);
-
-            return hash;
+            return sb.toString();
         } catch (Exception e) {
             corePlugin.getLogger().severe("Error calculating plugin hash: " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
+    }
+
+    public String calculatePluginJarHash(Plugin plugin) {
+        return calculatePluginHash(plugin);
     }
 
     private java.io.File getPluginJarFile(Plugin plugin) {
@@ -153,8 +146,6 @@ public class PluginDependencyService {
                 corePlugin.getLogger().severe("Plugins folder not found!");
                 return null;
             }
-
-            corePlugin.getLogger().info("Searching for original JAR of: " + pluginName + " v" + pluginVersion);
 
             java.io.File exactMatch = null;
             java.io.File partialMatch = null;
@@ -188,11 +179,9 @@ public class PluginDependencyService {
 
             if (result == null) {
                 corePlugin.getLogger().severe("Could not find original JAR for: " + pluginName);
-                corePlugin.getLogger().severe("Searched in: " + pluginsFolder.getAbsolutePath());
                 return null;
             }
 
-            corePlugin.getLogger().info("Found original JAR: " + result.getName());
             return result;
 
         } catch (Exception e) {
@@ -210,10 +199,14 @@ public class PluginDependencyService {
         corePlugin.getLogger().info("Validating " + dependentPlugins.size() + " dependent plugin(s)...");
 
         for (String jarHash : dependentPlugins.keySet()) {
-            corePlugin.getLogger().info("========================================");
-            corePlugin.getLogger().info("Checking authorization for plugin");
-            corePlugin.getLogger().info("  Full Hash: " + jarHash);
-            corePlugin.getLogger().info("========================================");
+            Boolean cachedResult = dependentPlugins.get(jarHash);
+            if (cachedResult != null && cachedResult) {
+                Plugin authorizedPlugin = findPluginByHash(jarHash);
+                if (authorizedPlugin != null) {
+                    corePlugin.getLogger().info("Plugin '" + authorizedPlugin.getName() + "' already validated! ✓");
+                }
+                continue;
+            }
 
             validationService.isPluginAuthorized(jarHash).thenAccept(authorized -> {
                 dependentPlugins.put(jarHash, authorized);
@@ -234,7 +227,7 @@ public class PluginDependencyService {
                 } else {
                     Plugin authorizedPlugin = findPluginByHash(jarHash);
                     String pluginName = authorizedPlugin != null ? authorizedPlugin.getName() : "Unknown";
-                    corePlugin.getLogger().info("Plugin '" + pluginName + "' is authorized! ✓");
+                    corePlugin.getLogger().info("✓ Plugin '" + pluginName + "' is authorized and enabled!");
                 }
             }).exceptionally(throwable -> {
                 corePlugin.getLogger().severe("Error validating hash: " + throwable.getMessage());
