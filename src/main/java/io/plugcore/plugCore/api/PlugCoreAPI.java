@@ -41,7 +41,8 @@ public class PlugCoreAPI {
 
         if (!isServerLinked()) {
             plugin.getLogger().severe("Server not linked to PlugCore!");
-            plugin.getLogger().severe("Run /plugcore link <token> to link your server.");
+            plugin.getLogger().severe("This plugin cannot run on unlinked servers.");
+            plugin.getLogger().severe("Link your server: /plugcore link <token>");
             plugin.getLogger().severe("Get your token from plugcore.io/account");
             org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                 org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
@@ -61,7 +62,8 @@ public class PlugCoreAPI {
         instance.getValidationService().isPluginAuthorized(jarHash).thenAccept(authorized -> {
             if (!authorized) {
                 plugin.getLogger().severe("This plugin is NOT authorized!");
-                plugin.getLogger().severe("Purchase this plugin at plugcore.io");
+                plugin.getLogger().severe("You have not purchased this plugin.");
+                plugin.getLogger().severe("Purchase at plugcore.io");
                 org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                     org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
                 });

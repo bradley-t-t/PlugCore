@@ -48,18 +48,19 @@ public final class PlugCore extends JavaPlugin {
             dependencyService.scanPlugins();
 
             if (configUtil.isServerLinked()) {
-                getLogger().info("Server is linked. Validating with PlugCore...");
                 validationService.validateServerLink().thenAccept(valid -> {
                     if (valid) {
                         getLogger().info("Server validation successful!");
                         dependencyService.validateDependentPlugins();
                     } else {
-                        getLogger().warning("Server validation failed. Please re-link your server.");
+                        getLogger().warning("Server link expired or invalid. Please re-link your server.");
+                        getLogger().warning("Use /plugcore link <token> to link your server.");
+                        configUtil.setServerLinked(false);
                     }
                 });
             } else {
                 getLogger().warning("Server is not linked to PlugCore.");
-                getLogger().warning("Use /plugcore link <code> to link your server.");
+                getLogger().warning("Use /plugcore link <token> to link your server.");
             }
         }, 20L);
 

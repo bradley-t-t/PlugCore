@@ -86,7 +86,8 @@ public class PluginDependencyService {
 
                     if (!authorized) {
                         corePlugin.getLogger().severe("STARTUP plugin '" + plugin.getName() + "' is NOT authorized!");
-                        corePlugin.getLogger().severe("This plugin will be disabled. Purchase at plugcore.io");
+                        corePlugin.getLogger().severe("Reason: Server not linked or plugin not purchased.");
+                        corePlugin.getLogger().severe("Link your server at plugcore.io or purchase this plugin.");
                         dependentPlugins.put(jarHash, false);
                     } else {
                         corePlugin.getLogger().info("STARTUP plugin '" + plugin.getName() + "' is authorized! ✓");
@@ -202,9 +203,6 @@ public class PluginDependencyService {
             Boolean cachedResult = dependentPlugins.get(jarHash);
             if (cachedResult != null && cachedResult) {
                 Plugin authorizedPlugin = findPluginByHash(jarHash);
-                if (authorizedPlugin != null) {
-                    corePlugin.getLogger().info("Plugin '" + authorizedPlugin.getName() + "' already validated! ✓");
-                }
                 continue;
             }
 
@@ -215,7 +213,7 @@ public class PluginDependencyService {
                     Plugin pluginToDisable = findPluginByHash(jarHash);
                     String pluginName = pluginToDisable != null ? pluginToDisable.getName() : "Unknown";
 
-                    corePlugin.getLogger().warning("Plugin '" + pluginName + "' is NOT authorized!");
+                    corePlugin.getLogger().warning("Plugin '" + pluginName + "' is NOT validated!");
                     corePlugin.getLogger().warning("Make sure you have purchased this plugin on plugcore.io");
 
                     if (pluginToDisable != null && pluginToDisable.isEnabled()) {
