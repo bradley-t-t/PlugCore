@@ -199,10 +199,18 @@ public class PluginDependencyService {
 
         corePlugin.getLogger().info("Validating " + dependentPlugins.size() + " dependent plugin(s)...");
 
+        int totalPlugins = dependentPlugins.size();
+        java.util.concurrent.atomic.AtomicInteger processedCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        java.util.concurrent.atomic.AtomicInteger authorizedCount = new java.util.concurrent.atomic.AtomicInteger(0);
+        java.util.concurrent.atomic.AtomicInteger failedCount = new java.util.concurrent.atomic.AtomicInteger(0);
+
         for (String jarHash : dependentPlugins.keySet()) {
             Boolean cachedResult = dependentPlugins.get(jarHash);
             if (cachedResult != null && cachedResult) {
-                Plugin authorizedPlugin = findPluginByHash(jarHash);
+                authorizedCount.incrementAndGet();
+                if (processedCount.incrementAndGet() == totalPlugins) {
+                    logValidationSummary(totalPlugins, authorizedCount.get(), failedCount.get());
+                }
                 continue;
             }
 
@@ -210,6 +218,7 @@ public class PluginDependencyService {
                 dependentPlugins.put(jarHash, authorized);
 
                 if (!authorized) {
+                    failedCount.incrementAndGet();
                     Plugin pluginToDisable = findPluginByHash(jarHash);
                     String pluginName = pluginToDisable != null ? pluginToDisable.getName() : "Unknown";
 
@@ -223,14 +232,34 @@ public class PluginDependencyService {
                         });
                     }
                 } else {
+                    authorizedCount.incrementAndGet();
                     Plugin authorizedPlugin = findPluginByHash(jarHash);
                     String pluginName = authorizedPlugin != null ? authorizedPlugin.getName() : "Unknown";
                     corePlugin.getLogger().info("✓ Plugin '" + pluginName + "' is authorized and enabled!");
                 }
+
+                if (processedCount.incrementAndGet() == totalPlugins) {
+                    logValidationSummary(totalPlugins, authorizedCount.get(), failedCount.get());
+                }
             }).exceptionally(throwable -> {
+                failedCount.incrementAndGet();
                 corePlugin.getLogger().severe("Error validating hash: " + throwable.getMessage());
+
+                if (processedCount.incrementAndGet() == totalPlugins) {
+                    logValidationSummary(totalPlugins, authorizedCount.get(), failedCount.get());
+                }
                 return null;
             });
+        }
+    }
+
+    private void logValidationSummary(int total, int authorized, int failed) {
+        if (failed == 0) {
+            corePlugin.getLogger().info("Plugin validation complete! All " + total + " plugin(s) authorized.");
+        } else if (authorized == 0) {
+            corePlugin.getLogger().warning("Plugin validation complete! All " + total + " plugin(s) failed authorization.");
+        } else {
+            corePlugin.getLogger().warning("Plugin validation complete! " + authorized + " authorized, " + failed + " failed.");
         }
     }
 

@@ -71,7 +71,7 @@ public class PlugCoreCommand implements CommandExecutor, TabCompleter {
 
         if (args.length < 2) {
             sender.sendMessage(MessageUtil.error("Usage: /plugcore link <token>"));
-            sender.sendMessage(MessageUtil.info("Get your linking token from plugcore.io/account (Your Servers tab)"));
+            sender.sendMessage(MessageUtil.info("Get your linking token from your account page!"));
             return;
         }
 

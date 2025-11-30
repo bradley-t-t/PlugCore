@@ -43,7 +43,7 @@ public class PlugCoreAPI {
             plugin.getLogger().severe("Server not linked to PlugCore!");
             plugin.getLogger().severe("This plugin cannot run on unlinked servers.");
             plugin.getLogger().severe("Link your server: /plugcore link <token>");
-            plugin.getLogger().severe("Get your token from plugcore.io/account");
+            plugin.getLogger().severe("Get your token from your account page!");
             org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                 org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
             });

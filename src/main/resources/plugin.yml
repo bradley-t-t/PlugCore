@@ -1,5 +1,5 @@
 name: PlugCore
-version: '1.8-SNAPSHOT'
+version: '1.0.0'
 main: io.plugcore.plugCore.PlugCore
 api-version: '1.21'
 load: STARTUP
