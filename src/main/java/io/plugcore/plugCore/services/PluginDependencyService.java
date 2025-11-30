@@ -45,7 +45,8 @@ public class PluginDependencyService {
                 }
 
                 dependentPlugins.put(jarHash, false);
-                corePlugin.getLogger().info("Found dependent plugin: " + plugin.getName() + " (Hash: " + jarHash.substring(0, 8) + "...)");
+                corePlugin.getLogger().info("Found dependent plugin: " + plugin.getName());
+                corePlugin.getLogger().info("  Full Hash: " + jarHash);
             }
         }
     }
@@ -80,7 +81,8 @@ public class PluginDependencyService {
                     continue;
                 }
 
-                corePlugin.getLogger().info("Validating STARTUP plugin: " + plugin.getName() + " (Hash: " + jarHash.substring(0, 8) + "...)");
+                corePlugin.getLogger().info("Validating STARTUP plugin: " + plugin.getName());
+                corePlugin.getLogger().info("  Full Hash: " + jarHash);
 
                 try {
                     boolean authorized = validationService.isPluginAuthorizedSync(jarHash);
@@ -106,8 +108,13 @@ public class PluginDependencyService {
         try {
             java.io.File pluginFile = getPluginJarFile(plugin);
             if (pluginFile == null || !pluginFile.exists()) {
+                corePlugin.getLogger().severe("Plugin JAR file not found for: " + plugin.getName());
                 return null;
             }
+
+            corePlugin.getLogger().info("Calculating hash for: " + plugin.getName());
+            corePlugin.getLogger().info("  File: " + pluginFile.getAbsolutePath());
+            corePlugin.getLogger().info("  Size: " + pluginFile.length() + " bytes");
 
             java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
             java.io.FileInputStream fis = new java.io.FileInputStream(pluginFile);
@@ -124,18 +131,72 @@ public class PluginDependencyService {
             for (byte b : bytes) {
                 sb.append(String.format("%02x", b));
             }
-            return sb.toString();
+
+            String hash = sb.toString();
+            corePlugin.getLogger().info("  SHA-256 Hash (FULL): " + hash);
+
+            return hash;
         } catch (Exception e) {
             corePlugin.getLogger().severe("Error calculating plugin hash: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
 
     private java.io.File getPluginJarFile(Plugin plugin) {
         try {
-            java.net.URL url = plugin.getClass().getProtectionDomain().getCodeSource().getLocation();
-            return new java.io.File(url.toURI());
+            String pluginName = plugin.getName();
+            String pluginVersion = plugin.getDescription().getVersion();
+            java.io.File pluginsFolder = new java.io.File("plugins");
+
+            if (!pluginsFolder.exists() || !pluginsFolder.isDirectory()) {
+                corePlugin.getLogger().severe("Plugins folder not found!");
+                return null;
+            }
+
+            corePlugin.getLogger().info("Searching for original JAR of: " + pluginName + " v" + pluginVersion);
+
+            java.io.File exactMatch = null;
+            java.io.File partialMatch = null;
+
+            java.io.File[] files = pluginsFolder.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
+
+            if (files == null || files.length == 0) {
+                corePlugin.getLogger().severe("No JAR files found in plugins folder!");
+                return null;
+            }
+
+            for (java.io.File file : files) {
+                String fileName = file.getName();
+                String lowerFileName = fileName.toLowerCase();
+                String lowerPluginName = pluginName.toLowerCase();
+
+                if (fileName.equals(pluginName + ".jar") ||
+                    fileName.equals(pluginName + "-" + pluginVersion + ".jar")) {
+                    exactMatch = file;
+                    break;
+                }
+
+                if (partialMatch == null &&
+                    (lowerFileName.startsWith(lowerPluginName + "-") ||
+                     lowerFileName.startsWith(lowerPluginName + ".jar"))) {
+                    partialMatch = file;
+                }
+            }
+
+            java.io.File result = exactMatch != null ? exactMatch : partialMatch;
+
+            if (result == null) {
+                corePlugin.getLogger().severe("Could not find original JAR for: " + pluginName);
+                corePlugin.getLogger().severe("Searched in: " + pluginsFolder.getAbsolutePath());
+                return null;
+            }
+
+            corePlugin.getLogger().info("Found original JAR: " + result.getName());
+            return result;
+
         } catch (Exception e) {
+            corePlugin.getLogger().severe("Error locating plugin JAR: " + e.getMessage());
             return null;
         }
     }
@@ -149,7 +210,10 @@ public class PluginDependencyService {
         corePlugin.getLogger().info("Validating " + dependentPlugins.size() + " dependent plugin(s)...");
 
         for (String jarHash : dependentPlugins.keySet()) {
-            corePlugin.getLogger().info("Checking authorization for hash: " + jarHash.substring(0, 16) + "...");
+            corePlugin.getLogger().info("========================================");
+            corePlugin.getLogger().info("Checking authorization for plugin");
+            corePlugin.getLogger().info("  Full Hash: " + jarHash);
+            corePlugin.getLogger().info("========================================");
 
             validationService.isPluginAuthorized(jarHash).thenAccept(authorized -> {
                 dependentPlugins.put(jarHash, authorized);

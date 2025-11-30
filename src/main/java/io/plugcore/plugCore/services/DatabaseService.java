@@ -110,9 +110,18 @@ public class DatabaseService {
     public CompletableFuture<Boolean> checkPluginPurchase(UUID serverUuid, String jarHash) {
         return CompletableFuture.supplyAsync(() -> {
             try {
+                System.out.println("========================================");
+                System.out.println("[PlugCore DEBUG] Plugin Purchase Check");
+                System.out.println("========================================");
+                System.out.println("Server UUID: " + serverUuid.toString());
+                System.out.println("JAR Hash (FULL): " + jarHash);
+                System.out.println("API Endpoint: " + baseUrl + "/check-plugin");
+
                 JsonObject requestBody = new JsonObject();
                 requestBody.addProperty("serverUuid", serverUuid.toString());
                 requestBody.addProperty("jarHash", jarHash);
+
+                System.out.println("Request Body: " + gson.toJson(requestBody));
 
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(baseUrl + "/check-plugin"))
@@ -124,12 +133,25 @@ public class DatabaseService {
 
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
+                System.out.println("Response Status: " + response.statusCode());
+                System.out.println("Response Body: " + response.body());
+
                 if (response.statusCode() == 200) {
                     JsonObject jsonResponse = gson.fromJson(response.body(), JsonObject.class);
-                    return jsonResponse.has("purchased") && jsonResponse.get("purchased").getAsBoolean();
+                    boolean purchased = jsonResponse.has("purchased") && jsonResponse.get("purchased").getAsBoolean();
+                    System.out.println("Purchased: " + purchased);
+                    System.out.println("========================================");
+                    return purchased;
                 }
+
+                System.out.println("Request Failed - Status: " + response.statusCode());
+                System.out.println("========================================");
                 return false;
             } catch (IOException | InterruptedException e) {
+                System.err.println("[PlugCore ERROR] Exception during plugin check:");
+                System.err.println("Error: " + e.getMessage());
+                e.printStackTrace();
+                System.out.println("========================================");
                 return false;
             }
         });
