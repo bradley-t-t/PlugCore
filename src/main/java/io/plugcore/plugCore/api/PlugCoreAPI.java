@@ -15,11 +15,11 @@ public class PlugCoreAPI {
         return instance != null && instance.getValidationService().getCurrentLinkData().isLinked();
     }
 
-    public static CompletableFuture<Boolean> isPluginAuthorized(String pluginName) {
+    public static CompletableFuture<Boolean> isPluginAuthorizedByHash(String jarHash) {
         if (instance == null) {
             return CompletableFuture.completedFuture(false);
         }
-        return instance.getValidationService().isPluginAuthorized(pluginName);
+        return instance.getValidationService().isPluginAuthorized(jarHash);
     }
 
     public static CompletableFuture<Boolean> validateServer() {
@@ -85,4 +85,3 @@ public class PlugCoreAPI {
         return instance;
     }
 }
-

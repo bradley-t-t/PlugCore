@@ -2,114 +2,111 @@ package io.plugcore.plugCore.services;
 
 import io.plugcore.plugCore.models.ServerLinkData;
 import io.plugcore.plugCore.models.ValidationResponse;
-import io.plugcore.plugCore.utils.ConfigUtil;
 import org.bukkit.plugin.Plugin;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ValidationService {
     private final DatabaseService databaseService;
-    private final ConfigUtil configUtil;
     private final Map<String, Long> validationCache;
+    private final HttpClient httpClient;
 
-    public ValidationService(Plugin plugin, DatabaseService databaseService, ConfigUtil configUtil) {
+    public ValidationService(Plugin plugin, DatabaseService databaseService) {
         this.databaseService = databaseService;
-        this.configUtil = configUtil;
         this.validationCache = new ConcurrentHashMap<>();
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+    }
+
+    private CompletableFuture<String> getExternalIP() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("https://api.ipify.org"))
+                        .timeout(Duration.ofSeconds(10))
+                        .build();
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() == 200) {
+                    return response.body().trim();
+                } else {
+                    throw new IOException("Failed to get IP: " + response.statusCode());
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error fetching external IP", e);
+            }
+        });
     }
 
     public CompletableFuture<ValidationResponse> linkServer(String token, String serverName, String minecraftVersion) {
-        UUID serverUuid = configUtil.getServerUUID();
-        if (serverUuid == null) {
-            serverUuid = UUID.randomUUID();
-            configUtil.setServerUUID(serverUuid);
-        }
+        String fingerprint = UUID.randomUUID().toString();
 
-        final UUID finalServerUuid = serverUuid;
-
-        return databaseService.linkServer(token, serverName, minecraftVersion, finalServerUuid)
-                .thenApply(response -> {
-                    if (response.isValid()) {
-                        configUtil.setServerLinked(true);
-                        configUtil.setServerId(finalServerUuid.toString());
-                        validationCache.put(finalServerUuid.toString(), System.currentTimeMillis());
-                    }
-                    return response;
-                });
+        return getExternalIP().thenCompose(ip -> {
+            return databaseService.linkServer(token, serverName, minecraftVersion, ip, fingerprint)
+                    .thenApply(response -> {
+                        if (response.isValid()) {
+                            validationCache.put(ip, System.currentTimeMillis());
+                        }
+                        return response;
+                    });
+        });
     }
 
     public CompletableFuture<Boolean> validateServerLink() {
-        if (!configUtil.isServerLinked()) {
-            return CompletableFuture.completedFuture(false);
-        }
+        return getExternalIP().thenCompose(ip -> {
+            long lastValidation = validationCache.getOrDefault(ip, 0L);
+            long currentTime = System.currentTimeMillis();
+            long ttl = 300 * 1000; // Hardcoded TTL
 
-        UUID serverUuid = configUtil.getServerUUID();
-        if (serverUuid == null) {
-            return CompletableFuture.completedFuture(false);
-        }
+            if (currentTime - lastValidation < ttl) {
+                return CompletableFuture.completedFuture(true);
+            }
 
-        String serverId = serverUuid.toString();
-        long lastValidation = validationCache.getOrDefault(serverId, 0L);
-        long currentTime = System.currentTimeMillis();
-        long ttl = configUtil.getValidationTTL() * 1000;
-
-        if (currentTime - lastValidation < ttl) {
-            return CompletableFuture.completedFuture(true);
-        }
-
-        return databaseService.validateServer(serverUuid)
-                .thenApply(response -> {
-                    if (response.isValid()) {
-                        validationCache.put(serverId, currentTime);
-                        return true;
-                    } else {
-                        configUtil.setServerLinked(false);
-                        validationCache.remove(serverId);
-                        return false;
-                    }
-                });
+            return databaseService.validateServer(ip)
+                    .thenApply(response -> {
+                        if (response.isValid()) {
+                            validationCache.put(ip, currentTime);
+                            return true;
+                        } else {
+                            validationCache.remove(ip);
+                            return false;
+                        }
+                    });
+        });
     }
 
-    public CompletableFuture<Boolean> isPluginAuthorized(String pluginId) {
-        if (!configUtil.isServerLinked()) {
-            return CompletableFuture.completedFuture(false);
-        }
-
-        UUID serverUuid = configUtil.getServerUUID();
-        if (serverUuid == null) {
-            return CompletableFuture.completedFuture(false);
-        }
-
-        return databaseService.checkPluginPurchase(serverUuid, pluginId);
+    public CompletableFuture<Boolean> isPluginAuthorized(String jarHash) {
+        return getExternalIP().thenCompose(ip -> {
+            return databaseService.checkPluginPurchase(ip, jarHash);
+        });
     }
 
     public boolean isPluginAuthorizedSync(String jarHash) {
-        if (!configUtil.isServerLinked()) {
-            return false;
-        }
-
-        UUID serverUuid = configUtil.getServerUUID();
-        if (serverUuid == null) {
-            return false;
-        }
-
         try {
-            return databaseService.checkPluginPurchase(serverUuid, jarHash).get();
+            String ip = getExternalIP().get();
+            return databaseService.checkPluginPurchase(ip, jarHash).get();
         } catch (Exception e) {
             throw new RuntimeException("Failed to validate plugin synchronously", e);
         }
     }
 
     public ServerLinkData getCurrentLinkData() {
+        // Since server-side, return dummy data or fetch from database
         return new ServerLinkData(
-                configUtil.getServerId(),
-                configUtil.getOwnerUUID(),
-                configUtil.getVerificationToken(),
-                configUtil.isServerLinked(),
+                "",
+                null,
+                "",
+                false,
                 List.of(),
-                validationCache.getOrDefault(configUtil.getServerId(), 0L)
+                0L
         );
     }
 
@@ -118,11 +115,7 @@ public class ValidationService {
     }
 
     public void unlinkServer() {
-        configUtil.setServerLinked(false);
-        configUtil.setServerId("");
-        configUtil.setOwnerUUID(UUID.randomUUID());
-        configUtil.setVerificationToken("");
+        // TODO: implement unlink via database
         clearCache();
     }
 }
-

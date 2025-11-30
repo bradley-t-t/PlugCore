@@ -105,16 +105,9 @@ public class PlugCoreCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleStatus(CommandSender sender) {
-        var linkData = validationService.getCurrentLinkData();
-
         sender.sendMessage(MessageUtil.info("=== PlugCore Status ==="));
-        sender.sendMessage(MessageUtil.info("Linked: " + (linkData.isLinked() ? "Yes" : "No")));
-
-        if (linkData.isLinked()) {
-            sender.sendMessage(MessageUtil.info("Server ID: " + linkData.getServerId()));
-            sender.sendMessage(MessageUtil.info("Owner UUID: " + linkData.getOwnerUUID()));
-            sender.sendMessage(MessageUtil.info("Purchased Plugins: " + linkData.getPurchasedPlugins().size()));
-        }
+        sender.sendMessage(MessageUtil.info("Configuration is stored server-side."));
+        sender.sendMessage(MessageUtil.info("Use /plugcore validate to check server link status."));
     }
 
     private void handleValidate(CommandSender sender) {
@@ -184,4 +177,3 @@ public class PlugCoreCommand implements CommandExecutor, TabCompleter {
         return new ArrayList<>();
     }
 }
-

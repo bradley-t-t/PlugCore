@@ -29,14 +29,15 @@ public class DatabaseService {
         this.gson = new Gson();
     }
 
-    public CompletableFuture<ValidationResponse> linkServer(String token, String serverName, String minecraftVersion, UUID serverUuid) {
+    public CompletableFuture<ValidationResponse> linkServer(String token, String serverName, String minecraftVersion, String serverIp, String serverFingerprint) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 JsonObject requestBody = new JsonObject();
                 requestBody.addProperty("token", token);
                 requestBody.addProperty("serverName", serverName);
                 requestBody.addProperty("minecraftVersion", minecraftVersion);
-                requestBody.addProperty("serverUuid", serverUuid.toString());
+                requestBody.addProperty("serverIp", serverIp);
+                requestBody.addProperty("serverFingerprint", serverFingerprint);
 
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(baseUrl + "/link-server"))
@@ -53,7 +54,7 @@ public class DatabaseService {
                     boolean success = jsonResponse.has("success") && jsonResponse.get("success").getAsBoolean();
                     String message = jsonResponse.has("message") ? jsonResponse.get("message").getAsString() : "Server linked";
 
-                    return new ValidationResponse(success, message, List.of(), serverUuid.toString());
+                    return new ValidationResponse(success, message, List.of(), serverIp);
                 } else {
                     JsonObject errorResponse = gson.fromJson(response.body(), JsonObject.class);
                     String errorMessage = errorResponse.has("error") ? errorResponse.get("error").getAsString() : "Failed to link server";
@@ -65,11 +66,11 @@ public class DatabaseService {
         });
     }
 
-    public CompletableFuture<ValidationResponse> validateServer(UUID serverUuid) {
+    public CompletableFuture<ValidationResponse> validateServer(String serverIp) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 JsonObject requestBody = new JsonObject();
-                requestBody.addProperty("serverUuid", serverUuid.toString());
+                requestBody.addProperty("serverIp", serverIp);
 
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(baseUrl + "/validate-server"))
@@ -95,7 +96,7 @@ public class DatabaseService {
                         }
                     }
 
-                    return new ValidationResponse(valid, message, plugins, serverUuid.toString());
+                    return new ValidationResponse(valid, message, plugins, serverIp);
                 } else {
                     JsonObject errorResponse = gson.fromJson(response.body(), JsonObject.class);
                     String errorMessage = errorResponse.has("error") ? errorResponse.get("error").getAsString() : "Validation failed";
@@ -107,11 +108,11 @@ public class DatabaseService {
         });
     }
 
-    public CompletableFuture<Boolean> checkPluginPurchase(UUID serverUuid, String jarHash) {
+    public CompletableFuture<Boolean> checkPluginPurchase(String serverIp, String jarHash) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 JsonObject requestBody = new JsonObject();
-                requestBody.addProperty("serverUuid", serverUuid.toString());
+                requestBody.addProperty("serverIp", serverIp);
                 requestBody.addProperty("jarHash", jarHash);
 
                 HttpRequest request = HttpRequest.newBuilder()
@@ -135,4 +136,3 @@ public class DatabaseService {
         });
     }
 }
-
