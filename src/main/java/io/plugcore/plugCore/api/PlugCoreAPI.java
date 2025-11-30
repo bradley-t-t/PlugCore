@@ -29,6 +29,56 @@ public class PlugCoreAPI {
         return instance.getValidationService().validateServerLink();
     }
 
+    public static boolean requireAuthorization(org.bukkit.plugin.Plugin plugin) {
+        if (instance == null) {
+            plugin.getLogger().severe("PlugCore not found! This plugin requires PlugCore to function.");
+            plugin.getLogger().severe("Download PlugCore from plugcore.io");
+            org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
+            });
+            return false;
+        }
+
+        if (!isServerLinked()) {
+            plugin.getLogger().severe("Server not linked to PlugCore!");
+            plugin.getLogger().severe("Run /plugcore link <token> to link your server.");
+            plugin.getLogger().severe("Get your token from plugcore.io/account");
+            org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
+            });
+            return false;
+        }
+
+        String jarHash = instance.getDependencyService().calculatePluginJarHash(plugin);
+        if (jarHash == null) {
+            plugin.getLogger().severe("Failed to calculate plugin hash!");
+            org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
+            });
+            return false;
+        }
+
+        instance.getValidationService().isPluginAuthorized(jarHash).thenAccept(authorized -> {
+            if (!authorized) {
+                plugin.getLogger().severe("This plugin is NOT authorized!");
+                plugin.getLogger().severe("Purchase this plugin at plugcore.io");
+                org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                    org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
+                });
+            } else {
+                plugin.getLogger().info("Plugin authorized! ✓");
+            }
+        }).exceptionally(throwable -> {
+            plugin.getLogger().severe("Failed to validate authorization: " + throwable.getMessage());
+            org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
+            });
+            return null;
+        });
+
+        return true;
+    }
+
     public static PlugCore getInstance() {
         return instance;
     }
