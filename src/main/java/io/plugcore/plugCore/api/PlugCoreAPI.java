@@ -8,7 +8,7 @@ public class PlugCoreAPI {
     private static PlugCore instance;
 
     public static boolean isServerLinked() {
-        return instance != null && instance.getValidationService().getCurrentLinkData().isLinked();
+        return instance.getValidationService().getCurrentLinkData().isLinked();
     }
 
     public static CompletableFuture<Boolean> isPluginAuthorizedByHash(String jarHash) {
