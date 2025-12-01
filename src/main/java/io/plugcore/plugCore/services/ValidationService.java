@@ -90,6 +90,33 @@ public class ValidationService {
         });
     }
 
+    public boolean validateServerLinkSync() {
+        try {
+            String ip = getExternalIP().get();
+            long lastValidation = validationCache.getOrDefault(ip, 0L);
+            long currentTime = System.currentTimeMillis();
+            long ttl = 300 * 1000;
+
+            if (currentTime - lastValidation < ttl) {
+                serverLinked = true;
+                return true;
+            }
+
+            ValidationResponse response = databaseService.validateServer(ip).get();
+            if (response.isValid()) {
+                validationCache.put(ip, currentTime);
+                serverLinked = true;
+                return true;
+            } else {
+                validationCache.remove(ip);
+                serverLinked = false;
+                return false;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Validation error", e);
+        }
+    }
+
     public CompletableFuture<Boolean> isPluginAuthorized(String jarHash) {
         return getExternalIP().thenCompose(ip -> {
             return databaseService.checkPluginPurchase(ip, jarHash);

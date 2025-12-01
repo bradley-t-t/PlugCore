@@ -20,6 +20,16 @@ public final class PlugCore extends JavaPlugin {
         databaseService = new DatabaseService(DatabaseConfig.getBaseUrl(), DatabaseConfig.getAnonKey());
         validationService = new ValidationService(this, databaseService);
         dependencyService = new PluginDependencyService(this, validationService);
+        try {
+            boolean valid = validationService.validateServerLinkSync();
+            if (valid) {
+                getLogger().info("Server linked successfully during load.");
+            } else {
+                getLogger().warning("Server not linked during load.");
+            }
+        } catch (Exception e) {
+            getLogger().severe("Failed to validate server during load: " + e.getMessage());
+        }
         dependencyService.scanAndValidateStartupPlugins();
     }
 

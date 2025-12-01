@@ -30,7 +30,10 @@ public class PlugCoreAPI {
 
     public static boolean requireAuthorization(org.bukkit.plugin.Plugin plugin) {
         org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (!isServerLinked()) {
+            plugin.getLogger().info("Starting authorization check for plugin: " + plugin.getName());
+            boolean serverLinked = isServerLinked();
+            plugin.getLogger().info("isServerLinked() result: " + serverLinked);
+            if (!serverLinked) {
                 plugin.getLogger().severe("Server not linked to PlugCore!");
                 plugin.getLogger().severe("This plugin cannot run on unlinked servers.");
                 plugin.getLogger().severe("Link your server: /plugcore link <token>");
@@ -42,6 +45,7 @@ public class PlugCoreAPI {
             }
 
             String jarHash = instance.getDependencyService().calculatePluginJarHash(plugin);
+            plugin.getLogger().info("Calculated jarHash: " + jarHash);
             if (jarHash == null) {
                 plugin.getLogger().severe("Failed to calculate plugin hash!");
                 org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
@@ -51,6 +55,7 @@ public class PlugCoreAPI {
             }
 
             instance.getValidationService().isPluginAuthorized(jarHash).thenAccept(authorized -> {
+                plugin.getLogger().info("Authorization result for hash " + jarHash + ": " + authorized);
                 if (!authorized) {
                     plugin.getLogger().severe("This plugin is NOT authorized!");
                     plugin.getLogger().severe("You have not purchased this plugin.");
