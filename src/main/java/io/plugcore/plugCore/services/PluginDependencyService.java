@@ -3,7 +3,9 @@ package io.plugcore.plugCore.services;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class PluginDependencyService {
@@ -164,14 +166,14 @@ public class PluginDependencyService {
                 String lowerPluginName = pluginName.toLowerCase();
 
                 if (fileName.equals(pluginName + ".jar") ||
-                    fileName.equals(pluginName + "-" + pluginVersion + ".jar")) {
+                        fileName.equals(pluginName + "-" + pluginVersion + ".jar")) {
                     exactMatch = file;
                     break;
                 }
 
                 if (partialMatch == null &&
-                    (lowerFileName.startsWith(lowerPluginName + "-") ||
-                     lowerFileName.startsWith(lowerPluginName + ".jar"))) {
+                        (lowerFileName.startsWith(lowerPluginName + "-") ||
+                                lowerFileName.startsWith(lowerPluginName + ".jar"))) {
                     partialMatch = file;
                 }
             }

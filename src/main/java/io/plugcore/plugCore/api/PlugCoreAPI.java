@@ -7,10 +7,6 @@ import java.util.concurrent.CompletableFuture;
 public class PlugCoreAPI {
     private static PlugCore instance;
 
-    public static void setInstance(PlugCore plugCore) {
-        instance = plugCore;
-    }
-
     public static boolean isServerLinked() {
         return instance != null && instance.getValidationService().getCurrentLinkData().isLinked();
     }
@@ -74,5 +70,9 @@ public class PlugCoreAPI {
 
     public static PlugCore getInstance() {
         return instance;
+    }
+
+    public static void setInstance(PlugCore plugCore) {
+        instance = plugCore;
     }
 }

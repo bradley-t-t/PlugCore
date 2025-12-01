@@ -14,6 +14,10 @@ public class PluginValidatedEvent extends Event {
         this.authorized = authorized;
     }
 
+    public static HandlerList getHandlerList() {
+        return handlers;
+    }
+
     public String getPluginName() {
         return pluginName;
     }
@@ -24,10 +28,6 @@ public class PluginValidatedEvent extends Event {
 
     @Override
     public @NotNull HandlerList getHandlers() {
-        return handlers;
-    }
-
-    public static HandlerList getHandlerList() {
         return handlers;
     }
 }

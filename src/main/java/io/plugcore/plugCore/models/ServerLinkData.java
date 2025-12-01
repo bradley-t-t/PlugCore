@@ -12,7 +12,7 @@ public class ServerLinkData {
     private final long lastValidation;
 
     public ServerLinkData(String serverId, UUID ownerUUID, String verificationToken,
-                         boolean linked, List<String> purchasedPlugins, long lastValidation) {
+                          boolean linked, List<String> purchasedPlugins, long lastValidation) {
         this.serverId = serverId;
         this.ownerUUID = ownerUUID;
         this.verificationToken = verificationToken;

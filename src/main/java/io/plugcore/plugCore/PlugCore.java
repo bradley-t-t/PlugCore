@@ -3,8 +3,8 @@ package io.plugcore.plugCore;
 import io.plugcore.plugCore.api.PlugCoreAPI;
 import io.plugcore.plugCore.commands.PlugCoreCommand;
 import io.plugcore.plugCore.config.DatabaseConfig;
-import io.plugcore.plugCore.services.PluginDependencyService;
 import io.plugcore.plugCore.services.DatabaseService;
+import io.plugcore.plugCore.services.PluginDependencyService;
 import io.plugcore.plugCore.services.ValidationService;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -19,8 +19,6 @@ public final class PlugCore extends JavaPlugin {
         databaseService = new DatabaseService(DatabaseConfig.getBaseUrl(), DatabaseConfig.getAnonKey());
         validationService = new ValidationService(this, databaseService);
         dependencyService = new PluginDependencyService(this, validationService);
-
-        getLogger().info("Pre-validating STARTUP plugins...");
         dependencyService.scanAndValidateStartupPlugins();
     }
 

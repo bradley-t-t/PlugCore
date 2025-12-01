@@ -2,7 +2,8 @@
 
 **The official plugin validation system for plugcore.io**
 
-PlugCore validates premium Minecraft plugins purchased from plugcore.io. It ensures that only authorized servers can run premium plugins through seamless integration with your plugcore.io account.
+PlugCore validates premium Minecraft plugins purchased from plugcore.io. It ensures that only authorized servers can run
+premium plugins through seamless integration with your plugcore.io account.
 
 ---
 
@@ -39,14 +40,14 @@ That's it! Any premium plugins that require PlugCore will now validate automatic
 
 ### Commands
 
-| Command | Description |
-|---------|-------------|
+| Command                  | Description                     |
+|--------------------------|---------------------------------|
 | `/plugcore link <token>` | Link your server to plugcore.io |
-| `/plugcore unlink` | Unlink your server |
-| `/plugcore status` | Check server link status |
-| `/plugcore validate` | Manually validate plugins |
-| `/plugcore plugins` | List all dependent plugins |
-| `/plugcore reload` | Reload configuration |
+| `/plugcore unlink`       | Unlink your server              |
+| `/plugcore status`       | Check server link status        |
+| `/plugcore validate`     | Manually validate plugins       |
+| `/plugcore plugins`      | List all dependent plugins      |
+| `/plugcore reload`       | Reload configuration            |
 
 **Aliases:** `/pc`
 
@@ -74,7 +75,7 @@ name: MyPremiumPlugin
 version: 1.0.0
 main: com.example.MyPremiumPlugin
 api-version: '1.21'
-depend: [PlugCore]
+depend: [ PlugCore ]
 ```
 
 #### 2. Add Authorization Check
@@ -86,13 +87,13 @@ import io.plugcore.plugCore.api.PlugCoreAPI;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class MyPremiumPlugin extends JavaPlugin {
-    
+
     @Override
     public void onEnable() {
         if (!PlugCoreAPI.requireAuthorization(this)) {
             return;
         }
-        
+
         getLogger().info("MyPremiumPlugin enabled and authorized!");
     }
 }
@@ -173,6 +174,7 @@ Purchase the plugin at plugcore.io or verify your purchase
 ### "Plugin not authorized"
 
 This can mean:
+
 1. Server is not linked - use `/plugcore link <token>`
 2. Plugin not purchased - buy it on plugcore.io
 3. Subscription expired - renew your subscription
@@ -201,14 +203,16 @@ When a plugin developer releases an update:
 Validates that your plugin is authorized to run on this server.
 
 **Returns:** `boolean`
+
 - `true` if validation started successfully
 - `false` if PlugCore is missing or server not linked
 
 **Usage:**
+
 ```java
-if (!PlugCoreAPI.requireAuthorization(this)) {
-    return;
-}
+if(!PlugCoreAPI.requireAuthorization(this)){
+        return;
+        }
 ```
 
 ### `PlugCoreAPI.isServerLinked()`
@@ -218,10 +222,11 @@ Check if the server is linked to plugcore.io.
 **Returns:** `boolean`
 
 **Usage:**
+
 ```java
-if (PlugCoreAPI.isServerLinked()) {
-    // Server is linked
-}
+if(PlugCoreAPI.isServerLinked()){
+        // Server is linked
+        }
 ```
 
 ---

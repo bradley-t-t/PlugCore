@@ -1,5 +1,5 @@
 name: PlugCore
-version: '1.0.3'
+version: '1.0.4'
 main: io.plugcore.plugCore.PlugCore
 api-version: '1.21'
 load: STARTUP
@@ -11,5 +11,5 @@ commands:
   plugcore:
     description: Main PlugCore command
     usage: /plugcore <link|unlink|status|validate|plugins|reload>
-    aliases: [pc]
+    aliases: [ pc ]
 
