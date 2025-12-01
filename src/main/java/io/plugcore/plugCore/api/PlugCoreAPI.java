@@ -1,17 +1,35 @@
 package io.plugcore.plugCore.api;
 
 import io.plugcore.plugCore.PlugCore;
+import io.plugcore.plugCore.models.ServerLinkData;
 
 import java.util.concurrent.CompletableFuture;
 
 public class PlugCoreAPI {
-    private static PlugCore instance;
+    private static volatile PlugCore instance;
 
     public static boolean isServerLinked() {
+        System.out.println("[PlugCoreAPI] isServerLinked() called");
+        System.out.println("[PlugCoreAPI] instance is null: " + (instance == null));
         if (instance == null) {
+            System.out.println("[PlugCoreAPI] Returning false - instance is null");
             return false;
         }
-        return instance.getValidationService().getCurrentLinkData().isLinked();
+        System.out.println("[PlugCoreAPI] instance exists: " + instance);
+        System.out.println("[PlugCoreAPI] ValidationService is null: " + (instance.getValidationService() == null));
+        if (instance.getValidationService() == null) {
+            System.out.println("[PlugCoreAPI] Returning false - ValidationService is null");
+            return false;
+        }
+        ServerLinkData linkData = instance.getValidationService().getCurrentLinkData();
+        System.out.println("[PlugCoreAPI] LinkData is null: " + (linkData == null));
+        if (linkData == null) {
+            System.out.println("[PlugCoreAPI] Returning false - LinkData is null");
+            return false;
+        }
+        boolean linked = linkData.isLinked();
+        System.out.println("[PlugCoreAPI] linkData.isLinked(): " + linked);
+        return linked;
     }
 
     public static CompletableFuture<Boolean> isPluginAuthorizedByHash(String jarHash) {
