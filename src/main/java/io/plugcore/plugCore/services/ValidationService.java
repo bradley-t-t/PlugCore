@@ -20,6 +20,7 @@ public class ValidationService {
     private final DatabaseService databaseService;
     private final Map<String, Long> validationCache;
     private final HttpClient httpClient;
+    private volatile boolean serverLinked = false;
 
     public ValidationService(Plugin plugin, DatabaseService databaseService) {
         this.databaseService = databaseService;
@@ -56,6 +57,7 @@ public class ValidationService {
                     .thenApply(response -> {
                         if (response.isValid()) {
                             validationCache.put(ip, System.currentTimeMillis());
+                            serverLinked = true;
                         }
                         return response;
                     });
@@ -66,9 +68,10 @@ public class ValidationService {
         return getExternalIP().thenCompose(ip -> {
             long lastValidation = validationCache.getOrDefault(ip, 0L);
             long currentTime = System.currentTimeMillis();
-            long ttl = 300 * 1000; // Hardcoded TTL
+            long ttl = 300 * 1000;
 
             if (currentTime - lastValidation < ttl) {
+                serverLinked = true;
                 return CompletableFuture.completedFuture(true);
             }
 
@@ -76,9 +79,11 @@ public class ValidationService {
                     .thenApply(response -> {
                         if (response.isValid()) {
                             validationCache.put(ip, currentTime);
+                            serverLinked = true;
                             return true;
                         } else {
                             validationCache.remove(ip);
+                            serverLinked = false;
                             return false;
                         }
                     });
@@ -101,12 +106,11 @@ public class ValidationService {
     }
 
     public ServerLinkData getCurrentLinkData() {
-        // Since server-side, return dummy data or fetch from database
         return new ServerLinkData(
                 "",
                 null,
                 "",
-                false,
+                serverLinked,
                 List.of(),
                 0L
         );
@@ -117,7 +121,7 @@ public class ValidationService {
     }
 
     public void unlinkServer() {
-        // TODO: implement unlink via database
         clearCache();
+        serverLinked = false;
     }
 }
