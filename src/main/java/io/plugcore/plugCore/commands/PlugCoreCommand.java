@@ -43,17 +43,8 @@ public class PlugCoreCommand implements CommandExecutor, TabCompleter {
             case "unlink":
                 handleUnlink(sender);
                 break;
-            case "status":
-                handleStatus(sender);
-                break;
-            case "validate":
-                handleValidate(sender);
-                break;
             case "plugins":
                 handlePlugins(sender);
-                break;
-            case "reload":
-                handleReload(sender);
                 break;
             default:
                 sendHelpMessage(sender);
@@ -65,13 +56,13 @@ public class PlugCoreCommand implements CommandExecutor, TabCompleter {
 
     private void handleLink(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(MessageUtil.error("Only players can link their account."));
+            sender.sendMessage(MessageUtil.error("Only players can execute this command."));
             return;
         }
 
         if (args.length < 2) {
-            sender.sendMessage(MessageUtil.error("Usage: /plugcore link <token>"));
-            sender.sendMessage(MessageUtil.info("Get your linking token from your account page!"));
+            sender.sendMessage(MessageUtil.error("Command usage: /plugcore link <token>"));
+            sender.sendMessage(MessageUtil.info("Obtain your linking token from your account dashboard."));
             return;
         }
 
@@ -80,88 +71,56 @@ public class PlugCoreCommand implements CommandExecutor, TabCompleter {
         String serverName = player.getServer().getName();
         String minecraftVersion = player.getServer().getMinecraftVersion();
 
-        sender.sendMessage(MessageUtil.info("Linking server to your PlugCore account..."));
+        sender.sendMessage(MessageUtil.info("→ Linking your server... Please wait."));
 
         validationService.linkServer(token, serverName, minecraftVersion).thenAccept(response -> {
             if (response.isValid()) {
-                sender.sendMessage(MessageUtil.success("Server successfully linked to your PlugCore account!"));
-                sender.sendMessage(MessageUtil.info("Server: " + serverName));
+                sender.sendMessage(MessageUtil.success("✔ Server linked successfully!"));
+                sender.sendMessage(MessageUtil.info("● Server: " + serverName));
 
                 dependencyService.validateDependentPlugins();
             } else {
-                sender.sendMessage(MessageUtil.error("Failed to link server: " + response.getMessage()));
-                sender.sendMessage(MessageUtil.info("Make sure you have a valid linking token from plugcore.io"));
+                sender.sendMessage(MessageUtil.error("❌ Linking failed: " + response.getMessage()));
+                sender.sendMessage(MessageUtil.info("⚠ Ensure your token is valid from plugcore.io"));
             }
         }).exceptionally(throwable -> {
-            sender.sendMessage(MessageUtil.error("An error occurred while linking: " + throwable.getMessage()));
+            sender.sendMessage(MessageUtil.error("❌ An error occurred during linking: " + throwable.getMessage()));
             return null;
         });
     }
 
     private void handleUnlink(CommandSender sender) {
-        sender.sendMessage(MessageUtil.warning("Unlinking server from PlugCore..."));
+        sender.sendMessage(MessageUtil.warning("⚠ Unlinking server..."));
         validationService.unlinkServer();
-        sender.sendMessage(MessageUtil.success("Server has been unlinked."));
-    }
-
-    private void handleStatus(CommandSender sender) {
-        sender.sendMessage(MessageUtil.info("=== PlugCore Status ==="));
-        sender.sendMessage(MessageUtil.info("Configuration is stored server-side."));
-        sender.sendMessage(MessageUtil.info("Use /plugcore validate to check server link status."));
-    }
-
-    private void handleValidate(CommandSender sender) {
-        sender.sendMessage(MessageUtil.info("Validating server with PlugCore..."));
-
-        validationService.validateServerLink().thenAccept(valid -> {
-            if (valid) {
-                sender.sendMessage(MessageUtil.success("Server validation successful!"));
-                dependencyService.validateDependentPlugins();
-            } else {
-                sender.sendMessage(MessageUtil.error("Server validation failed. Please link your server again."));
-            }
-        }).exceptionally(throwable -> {
-            sender.sendMessage(MessageUtil.error("Validation error: " + throwable.getMessage()));
-            return null;
-        });
+        sender.sendMessage(MessageUtil.success("✔ Server unlinked successfully."));
     }
 
     private void handlePlugins(CommandSender sender) {
         var authorized = dependencyService.getAuthorizedPlugins();
         var unauthorized = dependencyService.getUnauthorizedPlugins();
 
-        sender.sendMessage(MessageUtil.info("=== Dependent Plugins ==="));
+        sender.sendMessage(MessageUtil.info("Plugin Status:"));
 
         if (!authorized.isEmpty()) {
-            sender.sendMessage(MessageUtil.success("Authorized (" + authorized.size() + "):"));
-            authorized.forEach(plugin -> sender.sendMessage(MessageUtil.info("  - " + plugin)));
+            sender.sendMessage(MessageUtil.success("✔ Authorized Plugins (" + authorized.size() + "):"));
+            authorized.forEach(plugin -> sender.sendMessage(MessageUtil.info("  ◦ " + plugin)));
         }
 
         if (!unauthorized.isEmpty()) {
-            sender.sendMessage(MessageUtil.error("Unauthorized (" + unauthorized.size() + "):"));
-            unauthorized.forEach(plugin -> sender.sendMessage(MessageUtil.warning("  - " + plugin)));
+            sender.sendMessage(MessageUtil.error("❌ Unauthorized Plugins (" + unauthorized.size() + "):"));
+            unauthorized.forEach(plugin -> sender.sendMessage(MessageUtil.warning("  ⚠ " + plugin)));
         }
 
         if (authorized.isEmpty() && unauthorized.isEmpty()) {
-            sender.sendMessage(MessageUtil.info("No plugins depend on PlugCore."));
+            sender.sendMessage(MessageUtil.info("No dependent plugins found."));
         }
     }
 
-    private void handleReload(CommandSender sender) {
-        sender.sendMessage(MessageUtil.info("Reloading PlugCore..."));
-        dependencyService.scanPlugins();
-        dependencyService.validateDependentPlugins();
-        sender.sendMessage(MessageUtil.success("PlugCore reloaded successfully."));
-    }
-
     private void sendHelpMessage(CommandSender sender) {
-        sender.sendMessage(MessageUtil.info("=== PlugCore Commands ==="));
-        sender.sendMessage(MessageUtil.info("/plugcore link <token> - Link your server"));
-        sender.sendMessage(MessageUtil.info("/plugcore unlink - Unlink your server"));
-        sender.sendMessage(MessageUtil.info("/plugcore status - Check link status"));
-        sender.sendMessage(MessageUtil.info("/plugcore validate - Validate server"));
-        sender.sendMessage(MessageUtil.info("/plugcore plugins - List dependent plugins"));
-        sender.sendMessage(MessageUtil.info("/plugcore reload - Reload plugin checks"));
+        sender.sendMessage(MessageUtil.info("PlugCore Commands:"));
+        sender.sendMessage(MessageUtil.info("◦ /plugcore link <token> - Link your server to your account"));
+        sender.sendMessage(MessageUtil.info("◦ /plugcore unlink - Disconnect your server"));
+        sender.sendMessage(MessageUtil.info("◦ /plugcore plugins - View plugin status"));
     }
 
     @Override
@@ -171,7 +130,7 @@ public class PlugCoreCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 1) {
-            return Arrays.asList("link", "unlink", "status", "validate", "plugins", "reload");
+            return Arrays.asList("link", "unlink", "plugins");
         }
 
         return new ArrayList<>();
