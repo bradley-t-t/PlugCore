@@ -44,10 +44,7 @@ That's it! Any premium plugins that require PlugCore will now validate automatic
 |--------------------------|---------------------------------|
 | `/plugcore link <token>` | Link your server to plugcore.io |
 | `/plugcore unlink`       | Unlink your server              |
-| `/plugcore status`       | Check server link status        |
-| `/plugcore validate`     | Manually validate plugins       |
 | `/plugcore plugins`      | List all dependent plugins      |
-| `/plugcore reload`       | Reload configuration            |
 
 **Aliases:** `/pc`
 
