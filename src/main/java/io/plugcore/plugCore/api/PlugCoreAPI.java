@@ -8,6 +8,9 @@ public class PlugCoreAPI {
     private static PlugCore instance;
 
     public static boolean isServerLinked() {
+        if (instance == null) {
+            return false;
+        }
         return instance.getValidationService().getCurrentLinkData().isLinked();
     }
 
@@ -69,6 +72,9 @@ public class PlugCoreAPI {
     }
 
     public static PlugCore getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("PlugCore API is not available. Make sure PlugCore is loaded and enabled before using the API.");
+        }
         return instance;
     }
 
