@@ -16,15 +16,16 @@ public final class PlugCore extends JavaPlugin {
 
     @Override
     public void onLoad() {
+        PlugCoreAPI.setInstance(this);
         databaseService = new DatabaseService(DatabaseConfig.getBaseUrl(), DatabaseConfig.getAnonKey());
         validationService = new ValidationService(this, databaseService);
         dependencyService = new PluginDependencyService(this, validationService);
-        PlugCoreAPI.setInstance(this);
         dependencyService.scanAndValidateStartupPlugins();
     }
 
     @Override
     public void onEnable() {
+        onLoad();
         PlugCoreCommand command = new PlugCoreCommand(validationService, dependencyService);
         if (getCommand("plugcore") != null) {
             getCommand("plugcore").setExecutor(command);
