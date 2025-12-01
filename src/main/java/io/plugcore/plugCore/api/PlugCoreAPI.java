@@ -30,15 +30,6 @@ public class PlugCoreAPI {
     }
 
     public static boolean requireAuthorization(org.bukkit.plugin.Plugin plugin) {
-        if (instance == null) {
-            plugin.getLogger().severe("PlugCore not found! This plugin requires PlugCore to function.");
-            plugin.getLogger().severe("Download PlugCore from plugcore.io");
-            org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-                org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
-            });
-            return false;
-        }
-
         if (!isServerLinked()) {
             plugin.getLogger().severe("Server not linked to PlugCore!");
             plugin.getLogger().severe("This plugin cannot run on unlinked servers.");
