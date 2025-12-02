@@ -6,7 +6,7 @@
 
     <groupId>io.plugcore</groupId>
     <artifactId>PlugCore</artifactId>
-    <version>Core-1.0.1</version>
+    <version>Core-1.0.3</version>
     <packaging>jar</packaging>
 
     <name>PlugCore</name>
