@@ -13,6 +13,10 @@ public class PlugCore extends JavaPlugin {
     private ValidationService validationService;
     private PluginDependencyService dependencyService;
 
+    public static PlugCore getInstance() {
+        return instance;
+    }
+
     @Override
     public void onLoad() {
         instance = this;
@@ -63,17 +67,11 @@ public class PlugCore extends JavaPlugin {
         instance = null;
     }
 
-    public static PlugCore getInstance() {
-        return instance;
-    }
-
     public ValidationService getValidationService() {
         return validationService;
     }
 
-    public PluginDependencyService getDependencyService() {
-        return dependencyService;
-    }
+    public PluginDependencyService getDependencyService() { return dependencyService; }
 
     public boolean isServerLinked() {
         if (validationService == null) {

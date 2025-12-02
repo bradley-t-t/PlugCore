@@ -103,17 +103,33 @@ public class PlugCoreCommand implements CommandExecutor, TabCompleter {
 
         if (!authorized.isEmpty()) {
             sender.sendMessage(MessageUtil.success("✔ Authorized Plugins (" + authorized.size() + "):"));
-            authorized.forEach(plugin -> sender.sendMessage(MessageUtil.info("  ◦ " + plugin)));
+            authorized.forEach(jarHash -> {
+                String pluginName = getPluginNameFromHash(jarHash);
+                sender.sendMessage(MessageUtil.info("  ◦ " + pluginName));
+            });
         }
 
         if (!unauthorized.isEmpty()) {
             sender.sendMessage(MessageUtil.error("❌ Unauthorized Plugins (" + unauthorized.size() + "):"));
-            unauthorized.forEach(plugin -> sender.sendMessage(MessageUtil.warning("  ⚠ " + plugin)));
+            unauthorized.forEach(jarHash -> {
+                String pluginName = getPluginNameFromHash(jarHash);
+                sender.sendMessage(MessageUtil.warning("  ⚠ " + pluginName));
+            });
         }
 
         if (authorized.isEmpty() && unauthorized.isEmpty()) {
             sender.sendMessage(MessageUtil.info("No dependent plugins found."));
         }
+    }
+
+    private String getPluginNameFromHash(String jarHash) {
+        for (org.bukkit.plugin.Plugin plugin : org.bukkit.Bukkit.getPluginManager().getPlugins()) {
+            String pluginHash = dependencyService.calculatePluginJarHash(plugin);
+            if (jarHash.equals(pluginHash)) {
+                return plugin.getName();
+            }
+        }
+        return jarHash;
     }
 
     private void sendHelpMessage(CommandSender sender) {
