@@ -11,96 +11,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.CompletableFuture;
 
-public final class PlugCore extends JavaPlugin {
-    private static volatile PlugCore instance;
-    private DatabaseService databaseService;
+public class PlugCore extends JavaPlugin {
     private ValidationService validationService;
     private PluginDependencyService dependencyService;
 
-    public static boolean isServerLinked() {
-        if (instance == null) {
-            return false;
-        }
-        if (instance.getValidationService() == null) {
-            return false;
-        }
-        ServerLinkData linkData = instance.getValidationService().getCurrentLinkData();
-        if (linkData == null) {
-            return false;
-        }
-        return linkData.isLinked();
-    }
-
-    public static CompletableFuture<Boolean> isPluginAuthorizedByHash(String jarHash) {
-        if (instance == null) {
-            return CompletableFuture.completedFuture(false);
-        }
-        return instance.getValidationService().isPluginAuthorized(jarHash);
-    }
-
-    public static CompletableFuture<Boolean> validateServer() {
-        if (instance == null) {
-            return CompletableFuture.completedFuture(false);
-        }
-        return instance.getValidationService().validateServerLink();
-    }
-
-    public static boolean requireAuthorization(org.bukkit.plugin.Plugin plugin) {
-        org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            boolean serverLinked = isServerLinked();
-            if (!serverLinked) {
-                plugin.getLogger().severe("Server not linked to PlugCore!");
-                plugin.getLogger().severe("This plugin cannot run on unlinked servers.");
-                plugin.getLogger().severe("Link your server: /plugcore link <token>");
-                plugin.getLogger().severe("Get your token from your account page!");
-                org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-                    org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
-                });
-                return;
-            }
-
-            String jarHash = instance.getDependencyService().calculatePluginJarHash(plugin);
-            if (jarHash == null) {
-                plugin.getLogger().severe("Failed to calculate plugin hash!");
-                org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-                    org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
-                });
-                return;
-            }
-
-            instance.getValidationService().isPluginAuthorized(jarHash).thenAccept(authorized -> {
-                if (!authorized) {
-                    plugin.getLogger().severe("This plugin is NOT authorized!");
-                    plugin.getLogger().severe("You have not purchased this plugin.");
-                    plugin.getLogger().severe("Purchase at plugcore.io");
-                    org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-                        org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
-                    });
-                } else {
-                    plugin.getLogger().info("Plugin authorized!");
-                }
-            }).exceptionally(throwable -> {
-                plugin.getLogger().severe("Failed to validate authorization: " + throwable.getMessage());
-                org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-                    org.bukkit.Bukkit.getPluginManager().disablePlugin(plugin);
-                });
-                return null;
-            });
-        }, 200L);
-        return true;
-    }
-
-    public static PlugCore getInstance() {
-        if (instance == null) {
-            throw new IllegalStateException("PlugCore is not available. Make sure PlugCore is loaded and enabled before using the API.");
-        }
-        return instance;
-    }
-
     @Override
     public void onLoad() {
-        instance = this;
-        databaseService = new DatabaseService(DatabaseConfig.getBaseUrl(), DatabaseConfig.getAnonKey());
+        DatabaseService databaseService = new DatabaseService(DatabaseConfig.getBaseUrl(), DatabaseConfig.getAnonKey());
         validationService = new ValidationService(this, databaseService);
         dependencyService = new PluginDependencyService(this, validationService);
         try {
