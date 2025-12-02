@@ -2,18 +2,15 @@ package io.plugcore.plugCore;
 
 import io.plugcore.plugCore.commands.PlugCoreCommand;
 import io.plugcore.plugCore.config.DatabaseConfig;
-import io.plugcore.plugCore.models.ServerLinkData;
 import io.plugcore.plugCore.services.DatabaseService;
 import io.plugcore.plugCore.services.PluginDependencyService;
 import io.plugcore.plugCore.services.ValidationService;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.concurrent.CompletableFuture;
-
 public class PlugCore extends JavaPlugin {
-    private ValidationService validationService;
-    private PluginDependencyService dependencyService;
+    private static ValidationService validationService;
+    private static PluginDependencyService dependencyService;
 
     @Override
     public void onLoad() {
@@ -63,11 +60,11 @@ public class PlugCore extends JavaPlugin {
         getLogger().info("PlugCore has been disabled!");
     }
 
-    public ValidationService getValidationService() {
+    public static ValidationService getValidationService() {
         return validationService;
     }
 
-    public PluginDependencyService getDependencyService() {
+    public static PluginDependencyService getDependencyService() {
         return dependencyService;
     }
 }
