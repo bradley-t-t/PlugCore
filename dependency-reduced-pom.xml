@@ -4,7 +4,7 @@
   <groupId>io.plugcore</groupId>
   <artifactId>PlugCore</artifactId>
   <name>PlugCore</name>
-  <version>1.2.1</version>
+  <version>1.2.2</version>
   <build>
     <defaultGoal>clean package</defaultGoal>
     <resources>
