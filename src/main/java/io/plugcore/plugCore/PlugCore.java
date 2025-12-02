@@ -1,5 +1,6 @@
 package io.plugcore.plugCore;
 
+import io.plugcore.plugCore.api.PlugCoreAPI;
 import io.plugcore.plugCore.commands.PlugCoreCommand;
 import io.plugcore.plugCore.config.DatabaseConfig;
 import io.plugcore.plugCore.services.DatabaseService;
@@ -38,6 +39,8 @@ public class PlugCore extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        PlugCoreAPI.initialize(this);
+
         PlugCoreCommand command = new PlugCoreCommand(validationService, dependencyService);
         if (getCommand("plugcore") != null) {
             getCommand("plugcore").setExecutor(command);
@@ -67,21 +70,7 @@ public class PlugCore extends JavaPlugin {
         instance = null;
     }
 
-    public ValidationService getValidationService() {
-        return validationService;
-    }
+    public ValidationService getValidationService() { return validationService; }
 
     public PluginDependencyService getDependencyService() { return dependencyService; }
-
-    public boolean isServerLinked() {
-        if (validationService == null) {
-            return false;
-        }
-        try {
-            return validationService.validateServerLinkSync();
-        } catch (Exception e) {
-            getLogger().warning("Error checking server link status: " + e.getMessage());
-            return false;
-        }
-    }
 }
