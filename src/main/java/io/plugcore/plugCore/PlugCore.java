@@ -9,8 +9,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class PlugCore extends JavaPlugin {
-    private static ValidationService validationService;
-    private static PluginDependencyService dependencyService;
+    public static ValidationService validationService;
+    public static PluginDependencyService dependencyService;
 
     @Override
     public void onLoad() {
