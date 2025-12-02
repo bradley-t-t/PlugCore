@@ -87,14 +87,25 @@ public class MyPremiumPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        if (!PlugCoreAPI.requireAuthorization(this)) {
-            return;
-        }
-
-        getLogger().info("MyPremiumPlugin enabled and authorized!");
+       try {
+          PlugCore plugCore = PlugCore.getInstance();
+          if (plugCore == null || !plugCore.isServerLinked()) {
+             getServer().getPluginManager().disablePlugin(this);
+          }
+       } catch (Exception e) {
+          getServer().getPluginManager().disablePlugin(this);
+       }
+       
+       // Rest of your code after validation. The PlugCore plugin handles the rest.
+       
     }
 }
 ```
+
+#### 3. You need to include the Jitpack repository and dependency in your build tool configuration.
+
+[![](https://jitpack.io/v/bradley-t-t/PlugCore.svg)](https://jitpack.io/#bradley-t-t/PlugCore)
+
 
 **That's all you need!**
 
