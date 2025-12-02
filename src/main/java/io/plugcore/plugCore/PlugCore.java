@@ -9,11 +9,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class PlugCore extends JavaPlugin {
-    public static ValidationService validationService;
-    public static PluginDependencyService dependencyService;
+    private static PlugCore instance;
+    private ValidationService validationService;
+    private PluginDependencyService dependencyService;
 
     @Override
     public void onLoad() {
+        instance = this;
         DatabaseService databaseService = new DatabaseService(DatabaseConfig.getBaseUrl(), DatabaseConfig.getAnonKey());
         validationService = new ValidationService(this, databaseService);
         dependencyService = new PluginDependencyService(this, validationService);
@@ -58,13 +60,30 @@ public class PlugCore extends JavaPlugin {
     @Override
     public void onDisable() {
         getLogger().info("PlugCore has been disabled!");
+        instance = null;
     }
 
-    public static ValidationService getValidationService() {
+    public static PlugCore getInstance() {
+        return instance;
+    }
+
+    public ValidationService getValidationService() {
         return validationService;
     }
 
-    public static PluginDependencyService getDependencyService() {
+    public PluginDependencyService getDependencyService() {
         return dependencyService;
+    }
+
+    public boolean isServerLinked() {
+        if (validationService == null) {
+            return false;
+        }
+        try {
+            return validationService.validateServerLinkSync();
+        } catch (Exception e) {
+            getLogger().warning("Error checking server link status: " + e.getMessage());
+            return false;
+        }
     }
 }
